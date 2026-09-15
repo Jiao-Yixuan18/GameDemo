@@ -130,8 +130,8 @@ public class SaveManager : MonoBehaviour
         data.resources = resourceSystem.Manager.GetAllResource();
         data.playerPosition = new PlayerPosition();
         // 通关后固定出生位置
-        data.playerPosition.x = 35f;
-        data.playerPosition.y = -2f;
+        data.playerPosition.x = 45f;
+        data.playerPosition.y = -2.716f;
         data.openedChestIds = worldStateManager.GetOpenedChestIds();
         data.defeatedEnemyIds = worldStateManager.GetDefeatedEnemyIds();
         data.completed = true;

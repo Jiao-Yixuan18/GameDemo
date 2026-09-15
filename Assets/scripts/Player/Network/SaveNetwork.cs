@@ -54,45 +54,39 @@ public class SaveNetwork
     }
     public IEnumerator ClearSave(System.Action<bool> callback = null)
     {
-        string fullurl = apiSettings.baseUrl + "/save/clear";
-        Debug.Log("进入最新ClearSave");
+        string fullurl =apiSettings.baseUrl +"/save/clear?slot=" +SaveSlotManager.CurrentSlot;
+        Debug.Log("准备清空存档：" + fullurl);
         UnityWebRequest request = new UnityWebRequest(fullurl, "POST");
-        request.downloadHandler =new DownloadHandlerBuffer();
-        request.timeout = 5;
-        var operation = request.SendWebRequest();
-        while (!operation.isDone)
-        {
-            Debug.Log("清理请求进度：" + operation.progress);
-            yield return null;
-        }
-        Debug.Log("请求完成");
+        request.downloadHandler = new DownloadHandlerBuffer();
+        yield return request.SendWebRequest();
         if (request.result == UnityWebRequest.Result.Success)
         {
-            Debug.Log( "后端存档清空成功:"+ request.downloadHandler.text );
+            Debug.Log("后端存档清空成功：" +request.downloadHandler.text);
             callback?.Invoke(true);
         }
         else
         {
-            Debug.LogError("清理失败:"+ request.error);
+            Debug.LogError("后端存档清空失败：" +request.error +"返回：" + request.downloadHandler.text);
             callback?.Invoke(false);
         }
         request.Dispose();
     }
     public IEnumerator ClearResources(System.Action<bool> callback = null)
     {
-        string fullurl = apiSettings.baseUrl + "/resource/clear";
-        Debug.Log("准备发送清空资源请求：" + fullurl);
+        string fullurl =apiSettings.baseUrl + "/resource/clear?slot=" + SaveSlotManager.CurrentSlot;
+        Debug.Log("准备清空资源：" + fullurl);
         UnityWebRequest request = new UnityWebRequest(fullurl, "POST");
         request.downloadHandler = new DownloadHandlerBuffer();
         yield return request.SendWebRequest();
         if (request.result == UnityWebRequest.Result.Success)
         {
-            Debug.Log("后端资源清空成功：" + request.downloadHandler.text);
+            Debug.Log( "后端资源清空成功：" + request.downloadHandler.text);
             callback?.Invoke(true);
         }
         else
         {
-            Debug.LogError("后端资源清空失败：" + request.error);
+            Debug.LogError("后端资源清空失败：" + request.error + "返回：" +request.downloadHandler.text
+            );
             callback?.Invoke(false);
         }
     }

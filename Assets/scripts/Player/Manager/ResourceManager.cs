@@ -31,41 +31,29 @@ public class ResourceManager
             callback?.Invoke(false);
             return;
         }
-        //查找背包里是否已经有这个资源
-        ResourceData resource = resources.Find(r => r.id == id);
-        if (resource != null)
-        {
-            //已有资源，直接增加数量
-            resource.count += count;
-        }
-        else
-        {
-            //第一次获得这个资源
-            ResourceData newResource = new ResourceData();
-            newResource.id = id;
-            newResource.count = count;
-            newResource.name = GetResourceName(id);
-            resources.Add(newResource);
-        }
-        Debug.Log("获得资源：" +GetResourceName(id) + " +" +count + "，当前数量：" + GetResourceCount(id));
-        //通知背包UI刷新
-        OnResourceChanged?.Invoke();
-        //告诉宝箱：增加资源成功
-        callback?.Invoke(true);
+
+        ResourceData data = new ResourceData();
+        data.id = id;
+        data.count = count;
+        data.name = GetResourceName(id);
+
+        Debug.Log("请求服务器增加资源：" + data.name + " +" + count);
+        syncToServer?.Invoke(data, callback);
     }
     //请求服务器减少资源
-    public void RequestRemoveResource(int id,int count,System.Action<bool> callback)
+    public void RequestRemoveResource(int id, int count, System.Action<bool> callback)
     {
-        if(!HasEnough(id,count))
+        if (count <= 0)
         {
-            Debug.Log("资源不足");
             callback?.Invoke(false);
             return;
         }
         ResourceData data = new ResourceData();
-        data.id= id;
-        data.count= count;
-        syncRemoveToServer?.Invoke(data,callback);
+        data.id = id;
+        data.count = count;
+        data.name = GetResourceName(id);
+        Debug.Log("请求服务器扣除资源：" + data.name + " -" + count);
+        syncRemoveToServer?.Invoke(data, callback);
     }
     //减少资源(备用）
     public bool RemoveResource(int id, int count)
@@ -102,11 +90,6 @@ public class ResourceManager
         //找不到资源默认返回0
         return 0;
     }
-    //判断资源是否够用
-    public bool HasEnough(int id, int needCount)
-    {
-        return GetResourceCount(id) >= needCount;
-    }
     //读取背包内全部资源
     public List<ResourceData> GetAllResource()
     {
@@ -132,33 +115,22 @@ public class ResourceManager
     //服务器返回最新资源后更新客户端
     public void UpdateFromServer(List<ResourceData> serverResources)
     {
-        Debug.Log(
-       "进入UpdateFromServer"
-        );
-        resources = serverResources;
+        Debug.Log("进入UpdateFromServer");
+        resources = new List<ResourceData>(serverResources);
         //debug
         Debug.Log("客户端当前资源数量:" + resources.Count);
-        foreach (ResourceData resource in resources)
-        {
-            Debug.Log(
-                resource.name
-                +
-                ":"
-                +
-                resource.count
-            );
-        }
         //
         foreach (ResourceData resource in resources)
         {
-            ResourceConfig config =
-                database.GetResource(resource.id);
+            ResourceConfig config =database.GetResource(resource.id);
             if (config != null)
             {
                 resource.name = config.itemName;
             }
+            Debug.Log( resource.name + ":" +resource.count );
         }
         Debug.Log("客户端资源更新完成");
+        OnResourceChanged?.Invoke();
     }
     public void LoadFromSave(List<ResourceData> saveResources)
     {
